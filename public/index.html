@@ -142,7 +142,7 @@
   </script>
 </body>
 </html> -->
-<!-- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -344,114 +344,4 @@
     });
   </script>
 </body>
-</html> -->
-
-<script>
-  // 🔑 Replace with your API key
-  const apiKey = "AIzaSyA9OrP22xgDu0KPEkxYaNhQ1J1OQtINQIE";
-
-  document.getElementById("analyzeBtn").addEventListener("click", async () => {
-    const url = document.getElementById("urlInput").value.trim();
-    const resultsDiv = document.getElementById("results");
-
-    if (!url) {
-      alert("Please enter a valid URL!");
-      return;
-    }
-
-    resultsDiv.innerHTML = '<p class="loading">Running Lighthouse accessibility audit...</p>';
-
-    try {
-      const apiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(
-        url
-      )}&category=ACCESSIBILITY&key=${apiKey}`;
-
-      const response = await fetch(apiUrl);
-      const data = await response.json();
-
-      if (!data.lighthouseResult) {
-        resultsDiv.innerHTML =
-          "<p>❌ Failed to analyze the page. Check your API key or URL.</p>";
-        return;
-      }
-
-      const lighthouse = data.lighthouseResult;
-      const accessibility = lighthouse.categories.accessibility;
-      const audits = lighthouse.audits;
-
-      // Screenshot (for public URLs)
-      const screenshot = audits["final-screenshot"]?.details?.data;
-
-      // Prepare UI
-      let html = `
-        <h3>✅ Accessibility Score: ${(accessibility.score * 100).toFixed(0)} / 100</h3>
-        ${
-          screenshot
-            ? `<h3>📸 Page Screenshot</h3><img src="${screenshot}" class="screenshot" alt="Screenshot of analyzed page" />`
-            : ""
-        }
-      `;
-
-      html += `<h3>🔎 Detailed Accessibility Issues</h3>`;
-
-      // Iterate over all accessibility-related audits
-      let issuesFound = false;
-      for (const [id, audit] of Object.entries(audits)) {
-        // Only consider accessibility audits with failing scores
-        if (
-          audit.score !== null &&
-          audit.score < 1 &&
-          audit.title &&
-          audit.id !== "final-screenshot"
-        ) {
-          issuesFound = true;
-          html += `
-            <div class="issue">
-              <p><strong>${audit.title}</strong></p>
-              <p>${audit.description || ""}</p>
-          `;
-
-          // Show detailed code snippets where available
-          if (audit.details && audit.details.items && audit.details.items.length > 0) {
-            audit.details.items.forEach((item) => {
-              const node = item.node || {};
-              if (node.snippet) {
-                html += `
-                  <pre><code>${node.snippet}</code></pre>
-                  ${node.selector ? `<p><strong>Selector:</strong> ${node.selector}</p>` : ""}
-                `;
-              } else if (item.path || item.selector) {
-                html += `
-                  <p><strong>Element:</strong> ${item.selector || item.path}</p>
-                `;
-              }
-
-              // Show contrast ratio, missing labels, etc.
-              if (item.contrastRatio) {
-                html += `<p><strong>Contrast Ratio:</strong> ${item.contrastRatio.toFixed(2)}</p>`;
-              }
-              if (item.label) {
-                html += `<p><strong>Label:</strong> ${item.label}</p>`;
-              }
-              if (item.explanation) {
-                html += `<p><strong>Note:</strong> ${item.explanation}</p>`;
-              }
-            });
-          }
-
-          html += `</div>`;
-        }
-      }
-
-      if (!issuesFound) {
-        html += `<p>🎉 No major accessibility issues found.</p>`;
-      }
-
-      resultsDiv.innerHTML = html;
-    } catch (error) {
-      console.error(error);
-      resultsDiv.innerHTML =
-        "<p>⚠️ Error running the accessibility check. See console for details.</p>";
-    }
-  });
-</script>
+</html>
